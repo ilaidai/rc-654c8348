@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pl" data-lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0f766e">
+<title>+2000 Recetas Saludables · CreaTuSabor</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#/"><span class="logo-mark">CT</span><span class="logo-txt">CreaTuSabor</span></a>
+  <form id="busq" class="search" role="search" autocomplete="off">
+    <input id="q" type="search" placeholder="Buscar receta o ingrediente…" aria-label="Buscar">
+  </form>
+</header>
+<main id="app" tabindex="-1"></main>
+<nav class="tabs" aria-label="Principal">
+  <a href="#/" data-t="home"><i>⌂</i><span>Inicio</span></a>
+  <a href="#/libros" data-t="libros"><i>▤</i><span>Libros</span></a>
+  <a href="#/favoritas" data-t="favoritas"><i>♥</i><span>Favoritas</span></a>
+  <a href="#/lista" data-t="lista"><i>✓</i><span>Mi lista</span></a>
+</nav>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>window.LANG=document.documentElement.dataset.lang||"es"</script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
