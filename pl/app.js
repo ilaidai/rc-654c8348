@@ -3,7 +3,7 @@
 const LANG=window.LANG||'es', T=window.I18N[LANG]||window.I18N.es;
 const $=s=>document.querySelector(s), app=$('#app');
 document.documentElement.lang=LANG;document.title=T.app+' · CreaTuSabor';$('#q').placeholder=T.buscar;
-document.querySelectorAll('.tabs a').forEach(a=>{a.querySelector('span').textContent=T[{home:'inicio',libros:'libros',favoritas:'favoritas',lista:'lista'}[a.dataset.t]]});
+document.querySelectorAll('.tabs a').forEach(a=>{a.querySelector('span').textContent=T[{home:'inicio',menu:'menu',lista:'lista',favoritas:'favoritas',mas:'mas'}[a.dataset.t]]});
 const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // ---- estado local (favoritas, lista) ----
@@ -16,7 +16,15 @@ const b64=x=>Uint8Array.from(atob(x.replace(/-/g,'+').replace(/_/g,'/')),c=>c.ch
 let KEY=null,IKEY=null;
 const impKey=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
 const dec=async(buf,key)=>crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(buf.slice(0,12))},key,buf.slice(12));
-async function initKey(){const m=location.hash.match(/^#k=([\w-]+)/);if(m){store.set('k_'+LANG,m[1]);history.replaceState(null,'',location.pathname+location.search+'#/')}const k=store.get('k_'+LANG,null);if(!k)return false;try{KEY=await impKey(b64(k));return true}catch(e){return false}}
+let MODS=[];
+async function sha16(k){const h=await crypto.subtle.digest('SHA-256',b64(k));return [...new Uint8Array(h)].slice(0,8).map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function initKey(){
+  const m=location.hash.match(/^#k=([\w.-]+)/);
+  if(m){const cur=store.get('ks_'+LANG,[]);store.set('ks_'+LANG,[...new Set([...cur,...m[1].split('.')])]);history.replaceState(null,'',location.pathname+location.search+'#/')}
+  const ks=store.get('ks_'+LANG,[]),old=store.get('k_'+LANG,null);if(old&&!ks.includes(old))ks.push(old);
+  try{MODS=(await (await fetch('modulos.json')).json()).modulos}catch(e){MODS=[{id:'recetas'}]}
+  for(const k of ks){try{const h=await sha16(k);const mo=MODS.find(x=>x.kh===h);if(mo)mo.k=k}catch(e){}}
+  const rec=MODS.find(x=>x.id==='recetas');if(rec&&rec.k){KEY=await impKey(b64(rec.k));return true}return false}
 // ---- datos ----
 const cache={};
 async function J(p){if(!cache[p]){const r=await fetch(p.replace(/\.json$/,'.bin'));if(!r.ok)throw new Error(p);cache[p]=JSON.parse(new TextDecoder().decode(await dec(await r.arrayBuffer(),KEY)))}return cache[p]}
@@ -92,6 +100,38 @@ function verLista(){
   $('#lv').onclick=()=>{if(confirm(T.confirmVaciar)){lista=[];saveLista();verLista()}};
   $('#lc').onclick=async()=>{const t=lista.map(l=>l.t+'\n'+l.items.filter(i=>!i.d).map(i=>'- '+i.x).join('\n')).join('\n\n');try{await navigator.clipboard.writeText(t);toast(T.copiado)}catch(e){}};
 }
+// ---- menu semanal ----
+const SLOTCAT=['desayunos','comidas','cenas','snacks'];
+let menu=store.get('menu',{});const saveMenu=()=>store.set('menu',menu);
+async function verMenu(){
+  const ix=await indice(),m=new Map(ix.map(r=>[r.id,r]));
+  const n=Object.keys(menu).length;
+  app.innerHTML=`<h1>${T.menuTitulo}</h1>${n?'':`<p class="sub">${T.menuVacio}</p>`}<div class="acts"><button class="btn" id="mg" ${n?'':'disabled'}>${T.generarLista}</button><button class="btn sec" id="mv" ${n?'':'disabled'}>${T.vaciarMenu}</button></div>`+
+  T.dias.map((d,i)=>`<h2>${d}</h2><div class="list">${T.slots.map((s,k)=>{const id=menu['d'+i+'_'+k],r=id&&m.get(id);return `<div class="row slot"><span><small>${s}</small><br>${r?`<a href="#/receta/${id}"><b>${esc(r.t)}</b></a>`:'<span class="mute">—</span>'}</span><button class="btn sm ${r?'sec':''}" data-s="d${i}_${k}">${r?'×':'+ '+T.añadir}</button></div>`}).join('')}</div>`).join('');
+  app.querySelectorAll('button[data-s]').forEach(b=>b.onclick=()=>{const s=b.dataset.s;if(menu[s]){delete menu[s];saveMenu();verMenu()}else elegir(s)});
+  $('#mv').onclick=()=>{if(confirm(T.confirmVaciar)){menu={};saveMenu();verMenu()}};
+  $('#mg').onclick=async()=>{const ids=[...new Set(Object.values(menu))];for(const id of ids){if(lista.some(l=>l.r===id))continue;const x=await receta(id);if(x)lista.push({r:id,t:x.r.t,items:itemsDe(x.r).map(t=>({x:t,d:false}))})}saveLista();toast(T.listaGenerada);location.hash='#/lista'};
+}
+async function elegir(slot){
+  const ix=await indice(),md=$('#modal'),k=+slot.split('_')[1];let q='';
+  const pinta=()=>{const toks=norm(q).split(/\s+/).filter(Boolean);let r=ix.filter(x=>toks.length?toks.every(t=>norm(x.t).includes(t)):x.c===SLOTCAT[k]);md.querySelector('.res').innerHTML=r.slice(0,40).map(x=>`<button class="row pick" data-id="${x.id}"><span>${esc(x.t)}</span></button>`).join('');md.querySelectorAll('.pick').forEach(b=>b.onclick=()=>{menu[slot]=b.dataset.id;saveMenu();md.hidden=true;verMenu()})};
+  md.innerHTML=`<div class="sheet"><div class="sh-top"><b>${T.elegir}</b><button class="btn sm sec" id="mx">${T.cerrar}</button></div><input id="mq" type="search" placeholder="${esc(T.buscar)}"><div class="res list"></div></div>`;md.hidden=false;
+  $('#mx').onclick=()=>{md.hidden=true};$('#mq').oninput=e=>{q=e.target.value;pinta()};pinta();$('#mq').focus();
+}
+// ---- mas: bonos, guias, modulos ----
+async function descarga(mod,it){
+  toast(T.cargando);
+  try{const r=await fetch('../b/'+it.id+'.bin');if(!r.ok)throw 0;const key=await impKey(b64(mod.k));const u=URL.createObjectURL(new Blob([await dec(await r.arrayBuffer(),key)],{type:'application/pdf'}));const a=document.createElement('a');a.href=u;a.download=it.t+'.pdf';a.target='_blank';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}catch(e){toast(T.sinConexion)}
+}
+async function verMas(){
+  const c=await catalogo(),guias=c.categorias.filter(k=>k.id==='importante').flatMap(k=>k.libros);
+  const bn=MODS.find(m=>m.id==='bonos');
+  app.innerHTML=`<h1>${T.mas}</h1>`+
+  (bn?`<h2>${T.bonos}</h2>`+(bn.k?`<div class="list">${bn.items.map(i=>`<div class="row"><span><b>${esc(i.t)}</b><br><small>${esc(i.d)} · ${i.mb} MB</small></span><button class="btn sm" data-b="${i.id}">${T.abrir}</button></div>`).join('')}</div>`:`<div class="lock"><b>${T.bloqueado}</b><p>${bn.items.map(i=>esc(i.t)).join(' · ')}</p><a class="btn" href="${bn.buy||'#'}" target="_blank" rel="noopener">${T.conseguir}</a></div>`):'')+
+  (guias.length?`<h2>${T.guiasTablas}</h2><div class="list">${guias.map(l=>`<a class="row" href="#/libro/${l.id}"><span><b>${esc(l.nombre)}</b></span><span>›</span></a>`).join('')}</div>`:'')+
+  `<h2>${T.libros}</h2><div class="acts"><a class="btn sec" href="#/libros">${T.libros}</a></div><p class="sub" style="margin-top:18px">${T.instalarTxt}</p>`;
+  app.querySelectorAll('button[data-b]').forEach(b=>b.onclick=()=>descarga(bn,bn.items.find(i=>i.id===b.dataset.b)));
+}
 let FILT={};
 async function buscar(q,f={}){
   const ix=await indice(), c=await catalogo();c.categorias.forEach(k=>k.libros.forEach(l=>BN[l.id]=l.nombre));
@@ -110,7 +150,7 @@ function notFound(m){app.innerHTML=`<p class="empty">${m||'No encontrado'}</p><p
 async function route(){
   const h=location.hash.replace(/^#\/?/,''), [a,b]=h.split('/'), arg=decodeURIComponent(b||'');
   document.title=T.app+' · CreaTuSabor';
-  document.querySelectorAll('.tabs a').forEach(x=>x.classList.toggle('on',x.dataset.t===({'':'home',libros:'libros',cat:'libros',libro:'libros',favoritas:'favoritas',lista:'lista'}[a]??'')));
+  document.querySelectorAll('.tabs a').forEach(x=>x.classList.toggle('on',x.dataset.t===({'':'home',libros:'libros',cat:'libros',libro:'libros',favoritas:'favoritas',lista:'lista',menu:'menu',mas:'mas'}[a]??'')));
   try{
     if(!a)await home();
     else if(a==='cat')await listaCat(arg);
@@ -119,6 +159,8 @@ async function route(){
     else if(a==='receta')await verReceta(arg);
     else if(a==='guia')await verGuia(arg);
     else if(a==='favoritas')await favoritas();
+    else if(a==='menu')await verMenu();
+    else if(a==='mas')await verMas();
     else if(a==='lista')verLista();
     else if(a==='buscar')await buscar(arg,FILT);
     else if(a==='estacion')await buscar('',{s:arg});
