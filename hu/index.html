@@ -1,35 +1,9 @@
-<!doctype html>
-<html lang="hu" data-lang="hu">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#0f766e">
-<title>+2000 Recetas Saludables · CreaTuSabor</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header class="top">
-  <a class="logo" href="#/"><span class="logo-mark">CT</span><span class="logo-txt">CreaTuSabor</span></a>
-  <form id="busq" class="search" role="search" autocomplete="off">
-    <input id="q" type="search" placeholder="Buscar receta o ingrediente…" aria-label="Buscar">
-  </form>
-</header>
-<main id="app" tabindex="-1"></main>
-<nav class="tabs" aria-label="Principal">
-  <a href="#/" data-t="home"><i>⌂</i><span>Inicio</span></a>
-  <a href="#/menu" data-t="menu"><i>▦</i><span>Menú</span></a>
-  <a href="#/lista" data-t="lista"><i>✓</i><span>Mi lista</span></a>
-  <a href="#/favoritas" data-t="favoritas"><i>♥</i><span>Favoritas</span></a>
-  <a href="#/mas" data-t="mas"><i>⋯</i><span>Más</span></a>
-</nav>
-<div id="modal" class="modal" hidden></div>
-<div id="toast" role="status" aria-live="polite"></div>
-<script>window.LANG=document.documentElement.dataset.lang||"es"</script>
-<script src="i18n.js"></script>
-<script src="app.js"></script>
-</body>
-</html>
+<!doctype html><html lang="es" data-lang="hu" data-assets="../"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#154c3b"><title>2000 Recetas Saludables · CreaTuSabor</title><link rel="manifest" href="manifest.json"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="style.css"></head><body>
+<aside><a class="brand" href="#explorar"><img src="wordmark.png" alt="CreaTuSabor"></a><p class="overline" id="t-over"></p><nav id="nav-side" aria-label="Recetario"></nav><div class="aside-note"><h3 id="t-nota"></h3><p id="t-nota3"></p></div><small>@creatusabor.store</small></aside>
+<div class="shell"><header><a class="mobilebrand" href="#explorar">CreaTuSabor</a><span id="breadcrumb"></span><span></span></header>
+<main><section class="intro"><p class="overline" id="t-introover"></p><h1 id="t-h1"></h1><p id="t-introp"></p><div id="stats" class="stats"></div></section><div id="app" aria-live="polite"><p class="loading" id="t-load"></p></div></main>
+<nav class="mobile-nav" id="nav-mob" aria-label="Navegación móvil"></nav></div>
+<dialog id="reader"><div id="readerbody"></div></dialog>
+<dialog id="add-menu"><form id="menu-form"><div class="modal-head"><h2 id="t-dlg"></h2><button type="button" data-close="add-menu" aria-label="x">×</button></div><p id="chosen-recipe"></p><label><span id="t-dia"></span><select id="menu-day"></select></label><label><span id="t-mom"></span><select id="menu-meal"></select></label><p class="muted" id="t-cambiar"></p><button class="primary" type="submit" id="t-guardar"></button></form></dialog>
+<p id="toast" role="status"></p>
+<script src="i18n.js"></script><script>window.LANG=document.documentElement.dataset.lang||"es";window.ASSETS=document.documentElement.dataset.assets??"../"</script><script src="app.js"></script></body></html>
