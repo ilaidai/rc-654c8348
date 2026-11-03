@@ -62,15 +62,15 @@ document.addEventListener('click',async e=>{const el=e.target.closest('button,[d
  if(d.page){page+=+d.page;listResults();$('#results').scrollIntoView({behavior:'smooth',block:'start'});return}
  if(d.add){selectedRecipe=byId.get(d.add);$('#chosen-recipe').textContent=selectedRecipe.t;$('#menu-meal').value=String({Desayunos:0,Comidas:1,Cenas:2,Snacks:3,Bebidas:4,Postres:5}[selectedRecipe.c]??1);$('#add-menu').showModal();return}
  if(d.remove){delete state.menu[d.remove];state.checked=[];persist();render();return}
- if(d.copyshop!==undefined){const t=shoppingText();try{await navigator.clipboard.writeText(t);toast(T.copiada)}catch{download('compra-creatusabor.txt',t);toast(T.descargada)}return}
- if(d.downloadshop!==undefined){download('compra-creatusabor.txt',shoppingText());toast(T.descargada);return}
+ if(d.copyshop!==undefined){const t=shoppingText();try{await navigator.clipboard.writeText(t);toast(T.copiada)}catch{download('lista-agoron.txt',t);toast(T.descargada)}return}
+ if(d.downloadshop!==undefined){download('lista-agoron.txt',shoppingText());toast(T.descargada);return}
  if(d.print!==undefined){window.print();return}
  }catch(err){toast(T.err)}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){query=e.target.value;page=0;listResults()}});
 document.addEventListener('change',e=>{if(e.target.id==='category'){category=e.target.value;page=0;listResults()}if(e.target.id==='season'){season=e.target.value;page=0;listResults()}if(e.target.dataset.check){const k=e.target.dataset.check;state.checked=e.target.checked?[...new Set([...state.checked,k])]:state.checked.filter(x=>x!==k);e.target.closest('label').classList.toggle('checked',e.target.checked);persist()}});
 $('#menu-form').addEventListener('submit',e=>{e.preventDefault();if(!selectedRecipe)return;state.menu[$('#menu-day').value+':'+$('#menu-meal').value]=selectedRecipe.id;state.checked=[];persist();$('#add-menu').close();toast(T.menuOk);if(view==='semana'||view==='compra')render()});
 // ---- cascara (textos) ----
-function shell(){document.documentElement.lang=LANG;document.title=T.titulo+' · CreaTuSabor';$('#t-over').textContent=T.over;$('#t-nota').innerHTML=esc(T.nota1)+'<br>'+esc(T.nota2);$('#t-nota3').textContent=T.nota3;$('#t-introover').textContent=T.introOver;$('#t-h1').innerHTML=esc(T.h1a)+'<br><em>'+esc(T.h1b)+'</em>';$('#t-introp').textContent=T.introP;$('#t-load').textContent=T.cargando;
+function shell(){document.documentElement.lang=LANG;document.title=T.titulo+' · Τραπέζι χωρίς ζάχαρη';$('#t-over').textContent=T.over;$('#t-nota').innerHTML=esc(T.nota1)+'<br>'+esc(T.nota2);$('#t-nota3').textContent=T.nota3;$('#t-introover').textContent=T.introOver;$('#t-h1').innerHTML=esc(T.h1a)+'<br><em>'+esc(T.h1b)+'</em>';$('#t-introp').textContent=T.introP;$('#t-load').textContent=T.cargando;
  const ic={explorar:'▦',libros:'▤',bonos:'✧',favoritos:'♡',semana:'▦',compra:'♧',guias:'◎'};$('#nav-side').innerHTML=VIEWS.map(v=>`<button data-view="${v}">${ic[v]} ${esc(T.nav[v])}</button>`).join('');$('#nav-mob').innerHTML=VIEWS.map(v=>`<button data-view="${v}">${esc(T.mnav[v])}</button>`).join('');
  $('#t-dlg').textContent=T.dlgAdd;$('#t-dia').textContent=T.dia;$('#t-mom').textContent=T.momento;$('#t-cambiar').textContent=T.cambiar;$('#t-guardar').textContent=T.guardarMenu;$('#menu-day').innerHTML=T.dias.map((d,i)=>`<option value="${i}">${esc(d)}</option>`).join('');$('#menu-meal').innerHTML=T.meals.map((d,i)=>`<option value="${i}">${esc(d)}</option>`).join('')}
 async function init(){shell();
